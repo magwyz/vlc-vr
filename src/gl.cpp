@@ -72,6 +72,8 @@ void init_gl(gl_ctx* ctx, int w, int h)
 	glEnable(GL_POLYGON_SMOOTH); 
 
 	glViewport(0, 0, ctx->screen->w, ctx->screen->h);
+
+    TTF_Init();
 }
 
 void draw_screen(float f_screenAR, float f_screenPos)

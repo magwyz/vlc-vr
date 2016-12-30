@@ -10,6 +10,7 @@ set(SOURCES      src/main.cpp
                  src/usercontrol.cpp
                  src/button.cpp
                  src/slider.cpp
+                 src/label.cpp
                  src/playercontroller.cpp
                  src/quaternion.cpp)
 set(HEADERS      include/gl.h
@@ -18,6 +19,7 @@ set(HEADERS      include/gl.h
                  include/usercontrol.h
                  include/button.h
                  include/slider.h
+                 include/label.h
                  include/playercontroller.h
                  include/quaternion.h)
 
@@ -29,6 +31,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
+find_package(SDL_ttf REQUIRED)
 
 add_executable(vlc-vr ${SOURCES} ${HEADERS})
 
@@ -38,7 +41,8 @@ target_link_libraries(vlc-vr
      ${OPENGL_LIBRARIES}
      ${GLEW_LIBRARIES}
      ${SDL_LIBRARY}
-     ${SDL_IMAGE_LIBRARY})
+     ${SDL_IMAGE_LIBRARY}
+     ${SDL_TTF_LIBRARY})
 target_include_directories(vlc-vr PUBLIC
      ${CMAKE_SOURCE_DIR}/include
      ${OPENHMD_INCLUDE_DIRS}
@@ -46,6 +50,7 @@ target_include_directories(vlc-vr PUBLIC
      ${OPENGL_INCLUDE_DIRS}
      ${GLEW_INCLUDE_DIRS}
      ${SDL_INCLUDE_DIR}
-     ${SDL_IMAGE_INCLUDE_DIR})
+     ${SDL_IMAGE_INCLUDE_DIR}
+     ${SDL_TTF_INCLUDE_DIR})
 set_target_properties(vlc-vr PROPERTIES LINK_FLAGS ${OPENHMD_LDFLAGS})
 

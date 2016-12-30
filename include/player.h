@@ -21,6 +21,8 @@ public:
     unsigned i_height;
 
     void setOnPositionChangedCallback(PlayerController *c, std::function<void(PlayerController&, float)> f);
+    void setTimeChangedCallback(PlayerController *c, std::function<void(PlayerController&, int64_t)> f);
+    void setLengthChangedCallback(PlayerController *c, std::function<void(PlayerController&, int64_t)> f);
     void setPlayingCallback(PlayerController *c, std::function<void(PlayerController&)> f);
     void setPausedCallback(PlayerController *c, std::function<void(PlayerController&)> f);
     void startPlayback(std::string mediaPath);
@@ -38,6 +40,12 @@ private:
     std::function<void(PlayerController&, float)> onPositionChanged;
     PlayerController *onPositionChangedController;
 
+    std::function<void(PlayerController&, int64_t)> timeChanged;
+    PlayerController *timeChangedController;
+
+    std::function<void(PlayerController&, int64_t)> lengthChanged;
+    PlayerController *lengthChangedController;
+
     std::function<void(PlayerController&)> onPlaying;
     PlayerController *onPlayingController;
 
@@ -45,6 +53,8 @@ private:
     PlayerController *onPausedController;
 
     static void libVLCPositionChanged(const struct libvlc_event_t *ev, void *data);
+    static void libVLCTimeChanged(const struct libvlc_event_t *ev, void *data);
+    static void libVLCLengthChanged(const struct libvlc_event_t *ev, void *data);
     static void libVLCPlaying(const struct libvlc_event_t *ev, void *data);
     static void libVLCPaused(const struct libvlc_event_t *ev, void *data);
 };

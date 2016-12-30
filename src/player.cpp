@@ -75,6 +75,8 @@ void Player::startPlayback(std::string mediaPath)
     evManager = libvlc_media_player_event_manager(mp);
 
     libvlc_event_attach(evManager, libvlc_MediaPlayerPositionChanged, libVLCPositionChanged, this);
+    libvlc_event_attach(evManager, libvlc_MediaPlayerTimeChanged, libVLCTimeChanged, this);
+    libvlc_event_attach(evManager, libvlc_MediaPlayerLengthChanged, libVLCLengthChanged, this);
     libvlc_event_attach(evManager, libvlc_MediaPlayerPlaying, libVLCPlaying, this);
     libvlc_event_attach(evManager, libvlc_MediaPlayerPaused, libVLCPaused, this);
 
@@ -119,6 +121,38 @@ void Player::libVLCPositionChanged(const struct libvlc_event_t *ev, void *data)
     float pos = libvlc_media_player_get_position(p->mp);
     if (p->onPositionChangedController != NULL)
         p->onPositionChanged(*(p->onPositionChangedController), pos);
+}
+
+
+void Player::setTimeChangedCallback(PlayerController *c, std::function<void(PlayerController&, int64_t)> f)
+{
+    timeChanged = f;
+    timeChangedController = c;
+}
+
+
+void Player::libVLCTimeChanged(const struct libvlc_event_t *ev, void *data)
+{
+    Player *p = (Player *)data;
+    int64_t t = libvlc_media_player_get_time(p->mp);
+    if (p->timeChangedController != NULL)
+        p->timeChanged(*(p->timeChangedController), t);
+}
+
+
+void Player::setLengthChangedCallback(PlayerController *c, std::function<void(PlayerController&, int64_t)> f)
+{
+    lengthChanged = f;
+    lengthChangedController = c;
+}
+
+
+void Player::libVLCLengthChanged(const struct libvlc_event_t *ev, void *data)
+{
+    Player *p = (Player *)data;
+    int64_t t = libvlc_media_player_get_length(p->mp);
+    if (p->lengthChangedController != NULL)
+        p->lengthChanged(*(p->lengthChangedController), t);
 }
 
 

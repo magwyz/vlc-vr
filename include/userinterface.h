@@ -7,6 +7,7 @@
 
 #include <button.h>
 #include <slider.h>
+#include <label.h>
 
 
 typedef enum

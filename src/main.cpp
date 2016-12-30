@@ -118,17 +118,23 @@ int main(int argc, char** argv)
 
     Button *play = new Button(0.02, 0.02, 0.05, 0.05, "play.png");
     Button *pause = new Button(0.02, 0.02, 0.05, 0.05, "pause.png");
-    Slider *slider = new Slider(0.02, 0.09, 0.36, 0.01);
+    Slider *slider = new Slider(0.05, 0.09, 0.3, 0.01);
+    Label *curTime = new Label(0.01, 0.085, 14, "");
+    Label *length = new Label(0.355, 0.085, 14, "");
 
     intf.addControl(play);
     intf.addControl(pause);
     intf.addControl(slider);
+    intf.addControl(curTime);
+    intf.addControl(length);
 
-    PlayerController c(slider, p, play, pause);
+    PlayerController c(slider, p, play, pause, curTime, length);
 
     p->setOnPositionChangedCallback(&c, &PlayerController::positionChanged);
     p->setPlayingCallback(&c, &PlayerController::playing);
     p->setPausedCallback(&c, &PlayerController::paused);
+    p->setTimeChangedCallback(&c, &PlayerController::timeChanged);
+    p->setLengthChangedCallback(&c, &PlayerController::lengthChanged);
     play->setOnCLickCallback(&c, &PlayerController::playClick);
     pause->setOnCLickCallback(&c, &PlayerController::pauseClick);
     slider->setOnUserChangedValueCallback(&c, &PlayerController::userChangedPosition);

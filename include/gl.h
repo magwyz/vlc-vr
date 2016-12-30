@@ -11,6 +11,7 @@
 #define GL_H
 
 #include <SDL/SDL.h>
+#include <SDL/SDL_ttf.h>
 
 #include <GL/glew.h>
 #include <GL/gl.h>

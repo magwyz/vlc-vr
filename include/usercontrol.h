@@ -17,6 +17,7 @@ typedef enum
     ACTIVATING,
     LOCKED,
     UNVISIBLE,
+    UNSELECTABLE,
 } state;
 
 
