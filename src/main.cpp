@@ -115,8 +115,8 @@ int main(int argc, char** argv)
     UserInterface<PlayerController> intf(-0.2, -0.2, -0.4, 0.4, 0.1);
     UserInterface<PlayerController> intfScreen(-0.5, -0.5, -2.f, 1.f, 1.f);
 
-    auto *play = new Button<PlayerController>(0.02, 0.02, 0.05, 0.05, "play.png");
-    auto *pause = new Button<PlayerController>(0.02, 0.02, 0.05, 0.05, "pause.png");
+    auto *play = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../play.png");
+    auto *pause = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../pause.png");
     auto *slider = new Slider<PlayerController>(0.05, 0.09, 0.3, 0.01);
     auto *curTime = new Label<PlayerController>(0.01, 0.085, 14, "");
     auto *length = new Label<PlayerController>(0.355, 0.085, 14, "");
