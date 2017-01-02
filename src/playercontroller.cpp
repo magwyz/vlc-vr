@@ -9,11 +9,12 @@
 PlayerController::PlayerController(Slider<PlayerController> *timeSlider, Player *player,
                                    Button<PlayerController> *play, Button<PlayerController> *pause,
                                    Label<PlayerController> *curTime, Label<PlayerController> *length,
+                                   UserInterface<PlayerController> *intf,
                                    UserInterface<PlayerController> *intfScreen)
     : timeSlider(timeSlider), player(player),
       play(play), pause(pause),
       curTime(curTime), length(length),
-      intfScreen(intfScreen)
+      intf(intf), intfScreen(intfScreen)
 { }
 
 
@@ -111,4 +112,11 @@ void PlayerController::zoomOut()
     z -= 0.05f;
     z = std::max(z, -4.f);
     intfScreen->setPosition(x, y, z);
+}
+
+
+void PlayerController::toggleScreenVisibility()
+{
+    bool visible = intf->getVisibility();
+    intf->setVisibility(!visible);
 }

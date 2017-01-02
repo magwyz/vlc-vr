@@ -136,9 +136,11 @@ int main(int argc, char** argv)
 
     intfScreen.addControl(screen);
 
-    PlayerController c(slider, p, play, pause, curTime, length, &intfScreen);
+    PlayerController c(slider, p, play, pause, curTime, length,
+                       &intf, &intfScreen);
 
     intf.setController(&c);
+    intfScreen.setController(&c);
 
     p->setOnPositionChangedCallback(&c, &PlayerController::positionChanged);
     p->setPlayingCallback(&c, &PlayerController::playing);
@@ -152,12 +154,12 @@ int main(int argc, char** argv)
     slider->setOnUnlockCallback(&PlayerController::sliderUnlocked);
     zoomIn->setOnCLickCallback(&PlayerController::zoomIn);
     zoomOut->setOnCLickCallback(&PlayerController::zoomOut);
+    screen->setOnCLickCallback(&PlayerController::toggleScreenVisibility);
 
     p->startPlayback(argv[1]);
 
 
     bool done = false;
-    float f_screenPos = -2.f;
     while(!done){
         ohmd_ctx_update(ctx);
 
@@ -181,6 +183,7 @@ int main(int argc, char** argv)
                     break;
                 case SDLK_SPACE:
                     intf.clickEvent();
+                    intfScreen.clickEvent();
                 default:
                     break;
                 }

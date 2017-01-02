@@ -28,11 +28,14 @@ public:
                   float width, float height)
         : x(x), y(y), z(z),
           width(width), height(height),
-          focussedControl(NULL)
+          focussedControl(NULL), visible(true)
     { }
 
     void draw()
     {
+        if (!visible)
+            return;
+
         /* Move to the user interface space. */
         glPushMatrix();
         glTranslatef(x, y, z);
@@ -66,6 +69,9 @@ public:
 
     void pointerFocus(ohmd_device* hmd)
     {
+        if (!visible)
+            return;
+
         float ori[4]; // Orientation quaternion.
         ohmd_device_getf(hmd, OHMD_ROTATION_QUAT, ori);
 
@@ -175,12 +181,23 @@ public:
         height = h;
     }
 
+    bool getVisibility()
+    {
+        return visible;
+    }
+
+    void setVisibility(bool v)
+    {
+        visible = v;
+    }
+
 private:
     std::vector<UserControl<Controller> *> controls;
     UserControl<Controller> *focussedControl;
 
     float x, y, z;
     float width, height;
+    bool visible;
 };
 
 #endif // USERINTERFACE_H

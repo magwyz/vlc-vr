@@ -11,6 +11,7 @@ public:
     PlayerController(Slider<PlayerController> *timeSlider, Player *player,
                      Button<PlayerController> *play, Button<PlayerController> *pause,
                      Label<PlayerController> *curTime, Label<PlayerController> *length,
+                     UserInterface<PlayerController> *intf,
                      UserInterface<PlayerController> *intfScreen);
 
     void positionChanged(float pos);
@@ -25,6 +26,7 @@ public:
     void sliderUnlocked();
     void zoomIn();
     void zoomOut();
+    void toggleScreenVisibility();
 
 private:
     std::string getTimeString(int64_t t);
@@ -35,6 +37,7 @@ private:
     Button<PlayerController> *pause;
     Label<PlayerController> *curTime;
     Label<PlayerController> *length;
+    UserInterface<PlayerController> *intf;
     UserInterface<PlayerController> *intfScreen;
 };
 
