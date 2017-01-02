@@ -8,9 +8,10 @@
 class PlayerController
 {
 public:
-    PlayerController(Slider *timeSlider, Player *player,
-                     Button *play, Button *pause,
-                     Label *curTime, Label *length);
+    PlayerController(Slider<PlayerController> *timeSlider, Player *player,
+                     Button<PlayerController> *play, Button<PlayerController> *pause,
+                     Label<PlayerController> *curTime, Label<PlayerController> *length,
+                     UserInterface<PlayerController> *intfScreen);
 
     void positionChanged(float pos);
     void timeChanged(int64_t t);
@@ -22,16 +23,19 @@ public:
     void userChangedPosition(float pos);
     void sliderLocked();
     void sliderUnlocked();
+    void zoomIn();
+    void zoomOut();
 
 private:
     std::string getTimeString(int64_t t);
 
     Player *player;
-    Slider *timeSlider;
-    Button *play;
-    Button *pause;
-    Label *curTime;
-    Label *length;
+    Slider<PlayerController> *timeSlider;
+    Button<PlayerController> *play;
+    Button<PlayerController> *pause;
+    Label<PlayerController> *curTime;
+    Label<PlayerController> *length;
+    UserInterface<PlayerController> *intfScreen;
 };
 
 #endif // PLAYERCONTROLLER_H

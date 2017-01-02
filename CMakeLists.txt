@@ -6,11 +6,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 set(SOURCES      src/main.cpp
                  src/gl.cpp
                  src/player.cpp
-                 src/userinterface.cpp
-                 src/usercontrol.cpp
-                 src/button.cpp
-                 src/slider.cpp
-                 src/label.cpp
                  src/playercontroller.cpp
                  src/quaternion.cpp)
 set(HEADERS      include/gl.h
@@ -21,7 +16,8 @@ set(HEADERS      include/gl.h
                  include/slider.h
                  include/label.h
                  include/playercontroller.h
-                 include/quaternion.h)
+                 include/quaternion.h
+                 include/screen.h)
 
 find_package(PkgConfig REQUIRED)
 pkg_search_module(OPENHMD REQUIRED openhmd)

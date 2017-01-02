@@ -24,9 +24,6 @@ typedef struct {
 struct Player;
 
 void init_gl(gl_ctx* ctx, int w, int h);
-void draw_screen(float f_screenAR, float f_screenPos);
-void initTexture();
-void updateTexture(Player *p);
 GLuint compile_shader(const char* vertex, const char* fragment);
 void create_fbo(int eye_width, int eye_height, GLuint* fbo, GLuint* color_tex, GLuint* depth_tex);
 

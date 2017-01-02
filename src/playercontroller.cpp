@@ -1,16 +1,19 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "playercontroller.h"
 
 
-PlayerController::PlayerController(Slider *timeSlider, Player *player,
-                                   Button *play, Button *pause,
-                                   Label *curTime, Label *length)
+PlayerController::PlayerController(Slider<PlayerController> *timeSlider, Player *player,
+                                   Button<PlayerController> *play, Button<PlayerController> *pause,
+                                   Label<PlayerController> *curTime, Label<PlayerController> *length,
+                                   UserInterface<PlayerController> *intfScreen)
     : timeSlider(timeSlider), player(player),
       play(play), pause(pause),
-      curTime(curTime), length(length)
+      curTime(curTime), length(length),
+      intfScreen(intfScreen)
 { }
 
 
@@ -88,4 +91,24 @@ void PlayerController::playClick()
 void PlayerController::pauseClick()
 {
     player->pause();
+}
+
+
+void PlayerController::zoomIn()
+{
+    float x, y, z;
+    intfScreen->getPosition(x, y, z);
+    z += 0.05f;
+    z = std::min(z, -0.7f);
+    intfScreen->setPosition(x, y, z);
+}
+
+
+void PlayerController::zoomOut()
+{
+    float x, y, z;
+    intfScreen->getPosition(x, y, z);
+    z -= 0.05f;
+    z = std::max(z, -4.f);
+    intfScreen->setPosition(x, y, z);
 }

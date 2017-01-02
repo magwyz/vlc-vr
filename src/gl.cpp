@@ -76,66 +76,6 @@ void init_gl(gl_ctx* ctx, int w, int h)
     TTF_Init();
 }
 
-void draw_screen(float f_screenAR, float f_screenPos)
-{
-        glBindTexture(GL_TEXTURE_2D, texture[0]);
-        // Alpha null to tell the shader to apply the texture.
-        glColor4f(0.f, 0.f, 0.f, 0.f);
-
-        /* The width of the screen is 1.
-         * We compute its height in function of the video AR. */
-
-        float h = 1 / f_screenAR;
-
-	glBegin(GL_QUADS);
-
-        glTexCoord2f(0.0, 1.0);
-        glVertex3f( -0.5f, -h / 2, f_screenPos);
-
-        glTexCoord2f(0.0, 0.0);
-        glVertex3f( -0.5f,  h / 2, f_screenPos);
-
-        glTexCoord2f(1.0, 0.0);
-        glVertex3f(  0.5f,  h / 2, f_screenPos);
-
-        glTexCoord2f(1.0, 1.0);
-        glVertex3f(  0.5f, -h / 2, f_screenPos);
-
-	glEnd();
-}
-
-
-void initTexture()
-{
-    /* Create The Texture */
-    glGenTextures(1, texture);
-
-    /* Typical Texture Generation Using Data From The Bitmap */
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    printf("texture[0]: %d\n", texture[0]);
-
-    /* Linear Filtering */
-    glEnable(GL_TEXTURE_2D);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1.0);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-}
-
-
-void updateTexture(Player *p)
-{
-    std::lock_guard<std::mutex> lock(p->mutex);
-
-    /* Generate The Texture */
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, p->i_width,
-                 p->i_height, 0, GL_BGR,
-                 GL_UNSIGNED_BYTE, p->p_imgData);
-}
-
 
 static void compile_shader_src(GLuint shader, const char* src)
 {
@@ -152,6 +92,7 @@ static void compile_shader_src(GLuint shader, const char* src)
 		printf("compile failed %s\n", log);
 	}
 }
+
 
 GLuint compile_shader(const char* vertex, const char* fragment)
 {

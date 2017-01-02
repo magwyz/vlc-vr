@@ -105,8 +105,6 @@ int main(int argc, char** argv)
     glUseProgram(shader2);
     glUniform1i(glGetUniformLocation(shader2, "myTexture"), 0);
 
-    initTexture();
-
     GLuint left_color_tex = 0, left_depth_tex = 0, left_fbo = 0;
     create_fbo(EYE_WIDTH, EYE_HEIGHT, &left_fbo, &left_color_tex, &left_depth_tex);
 
@@ -114,32 +112,46 @@ int main(int argc, char** argv)
     create_fbo(EYE_WIDTH, EYE_HEIGHT, &right_fbo, &right_color_tex, &right_depth_tex);
 
     /* User interface */
-    UserInterface intf(-0.2, -0.2, -0.4, 0.4, 0.1);
+    UserInterface<PlayerController> intf(-0.2, -0.2, -0.4, 0.4, 0.1);
+    UserInterface<PlayerController> intfScreen(-0.5, -0.5, -2.f, 1.f, 1.f);
 
-    Button *play = new Button(0.02, 0.02, 0.05, 0.05, "play.png");
-    Button *pause = new Button(0.02, 0.02, 0.05, 0.05, "pause.png");
-    Slider *slider = new Slider(0.05, 0.09, 0.3, 0.01);
-    Label *curTime = new Label(0.01, 0.085, 14, "");
-    Label *length = new Label(0.355, 0.085, 14, "");
+    auto *play = new Button<PlayerController>(0.02, 0.02, 0.05, 0.05, "play.png");
+    auto *pause = new Button<PlayerController>(0.02, 0.02, 0.05, 0.05, "pause.png");
+    auto *slider = new Slider<PlayerController>(0.05, 0.09, 0.3, 0.01);
+    auto *curTime = new Label<PlayerController>(0.01, 0.085, 14, "");
+    auto *length = new Label<PlayerController>(0.355, 0.085, 14, "");
+    auto *zoomIn = new Button<PlayerController>(0.34, 0.02, 0.02, 0.02, "../zoom_in.png");
+    auto *zoomOut = new Button<PlayerController>(0.365, 0.02, 0.02, 0.02, "../zoom_out.png");
+
+
+    auto *screen = new Screen<PlayerController>(0, 0, 1, 1);
 
     intf.addControl(play);
     intf.addControl(pause);
     intf.addControl(slider);
     intf.addControl(curTime);
     intf.addControl(length);
+    intf.addControl(zoomIn);
+    intf.addControl(zoomOut);
 
-    PlayerController c(slider, p, play, pause, curTime, length);
+    intfScreen.addControl(screen);
+
+    PlayerController c(slider, p, play, pause, curTime, length, &intfScreen);
+
+    intf.setController(&c);
 
     p->setOnPositionChangedCallback(&c, &PlayerController::positionChanged);
     p->setPlayingCallback(&c, &PlayerController::playing);
     p->setPausedCallback(&c, &PlayerController::paused);
     p->setTimeChangedCallback(&c, &PlayerController::timeChanged);
     p->setLengthChangedCallback(&c, &PlayerController::lengthChanged);
-    play->setOnCLickCallback(&c, &PlayerController::playClick);
-    pause->setOnCLickCallback(&c, &PlayerController::pauseClick);
-    slider->setOnUserChangedValueCallback(&c, &PlayerController::userChangedPosition);
-    slider->setOnLockCallback(&c, &PlayerController::sliderLocked);
-    slider->setOnUnlockCallback(&c, &PlayerController::sliderUnlocked);
+    play->setOnCLickCallback(&PlayerController::playClick);
+    pause->setOnCLickCallback(&PlayerController::pauseClick);
+    slider->setOnUserChangedValueCallback(&PlayerController::userChangedPosition);
+    slider->setOnLockCallback(&PlayerController::sliderLocked);
+    slider->setOnUnlockCallback(&PlayerController::sliderUnlocked);
+    zoomIn->setOnCLickCallback(&PlayerController::zoomIn);
+    zoomOut->setOnCLickCallback(&PlayerController::zoomOut);
 
     p->startPlayback(argv[1]);
 
@@ -167,14 +179,6 @@ int main(int argc, char** argv)
                         ohmd_device_setf(hmd, OHMD_POSITION_VECTOR, zero);
                     }
                     break;
-                case SDLK_UP:
-                    if (f_screenPos < -0.7f)
-                        f_screenPos += 0.05;
-                    break;
-                case SDLK_DOWN:
-                    if (f_screenPos > -4.f)
-                        f_screenPos -= 0.05;
-                    break;
                 case SDLK_SPACE:
                     intf.clickEvent();
                 default:
@@ -185,9 +189,20 @@ int main(int argc, char** argv)
 
         // Focus with the pointer
         intf.pointerFocus(hmd);
+        intfScreen.pointerFocus(hmd);
 
         // Update screen texture
-        updateTexture(p);
+        screen->updateTexture(p);
+
+        // Update the size of the screen.
+        {
+            float f_ar = (float)p->i_width / p->i_height;
+            intfScreen.setSize(1.f, 1 / f_ar);
+            screen->setSize(1.f, 1 / f_ar);
+            float x, y, z;
+            intfScreen.getPosition(x, y, z);
+            intfScreen.setPosition(-0.5f, -1 / f_ar / 2.f, z);
+        }
 
         // Common scene state
         glEnable(GL_BLEND);
@@ -207,9 +222,11 @@ int main(int argc, char** argv)
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, left_fbo);
         glViewport(0, 0, EYE_WIDTH, EYE_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        draw_screen((float)p->i_width / p->i_height, f_screenPos);
         intf.draw();
+        intfScreen.draw();
         intf.drawPointer(hmd);
+
+
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
 
@@ -226,8 +243,8 @@ int main(int argc, char** argv)
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, right_fbo);
         glViewport(0, 0, EYE_WIDTH, EYE_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        draw_screen((float)p->i_width / p->i_height, f_screenPos);
         intf.draw();
+        intfScreen.draw();
         intf.drawPointer(hmd);
 
         // Clean up common draw state
