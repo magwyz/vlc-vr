@@ -5,6 +5,9 @@
 
 #include <openhmd.h>
 
+#include <GL/glew.h>
+#include <GL/gl.h>
+
 #include <button.h>
 #include <slider.h>
 #include <label.h>
@@ -28,7 +31,8 @@ public:
                   float width, float height)
         : x(x), y(y), z(z),
           width(width), height(height),
-          focussedControl(NULL), visible(true)
+          focussedControl(NULL),
+          visible(true), drawContainer(true)
     { }
 
     void draw()
@@ -41,14 +45,17 @@ public:
         glTranslatef(x, y, z);
 
         /* Draw the background */
-        glColor4f(1.f, 0.f, 0.f, 1.f);
+        if (drawContainer)
+        {
+            glColor4f(50.f / 255, 50.f / 255, 50.f / 255, 1.f);
 
-        glBegin(GL_QUADS);
-        glVertex3f( 0.f, 0.f, 0.f);
-        glVertex3f( 0.f, height, 0.f);
-        glVertex3f( width, height, 0.f);
-        glVertex3f( width, 0.f, 0.f);
-        glEnd();
+            glBegin(GL_QUADS);
+            glVertex3f( 0.f, 0.f, 0.f);
+            glVertex3f( 0.f, height, 0.f);
+            glVertex3f( width, height, 0.f);
+            glVertex3f( width, 0.f, 0.f);
+            glEnd();
+        }
 
         glPushMatrix();
         glTranslatef(0.f, 0.f, 0.01f);
@@ -140,19 +147,22 @@ public:
         intersec[2] = d * vd.z;
 
         glPointSize(10.f);
-        glColor4f(0.f, 0.f, 1.f, 1.f);
+        glColor4f(255.f / 255, 136.f / 255, 0.f / 255, 1.f);
 
         glBegin(GL_POINTS);
         glVertex3f(intersec[0], intersec[1], intersec[2]);
         glEnd();
     }
 
-    void clickEvent()
+    bool clickEvent()
     {
+        bool ret = false;
         if (focussedControl != NULL)
         {
             focussedControl->clickEvent();
+            ret = true;
         }
+        return ret;
     }
 
     void setController(Controller *c)
@@ -191,6 +201,11 @@ public:
         visible = v;
     }
 
+    void setDrawContainer(bool d)
+    {
+        drawContainer = d;
+    }
+
 private:
     std::vector<UserControl<Controller> *> controls;
     UserControl<Controller> *focussedControl;
@@ -198,6 +213,7 @@ private:
     float x, y, z;
     float width, height;
     bool visible;
+    bool drawContainer;
 };
 
 #endif // USERINTERFACE_H

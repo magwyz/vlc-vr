@@ -105,6 +105,9 @@ int main(int argc, char** argv)
     glUseProgram(shader2);
     glUniform1i(glGetUniformLocation(shader2, "myTexture"), 0);
 
+    std::cout << "vPosition: " << glGetAttribLocation(shader2, "vPosition") << std::endl;
+    std::cout << "MultiTexCoord0: " << glGetAttribLocation(shader2, "MultiTexCoord0") << std::endl;
+
     GLuint left_color_tex = 0, left_depth_tex = 0, left_fbo = 0;
     create_fbo(EYE_WIDTH, EYE_HEIGHT, &left_fbo, &left_color_tex, &left_depth_tex);
 
@@ -113,18 +116,20 @@ int main(int argc, char** argv)
 
     /* User interface */
     UserInterface<PlayerController> intf(-0.2, -0.2, -0.4, 0.4, 0.1);
-    UserInterface<PlayerController> intfScreen(-0.5, -0.5, -2.f, 1.f, 1.f);
+    UserInterface<PlayerController> intfScreen(0.f, 0.f, 0.f, 1.f, 1.f);
+    intfScreen.setDrawContainer(false);
 
-    auto *play = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../play.png");
-    auto *pause = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../pause.png");
-    auto *slider = new Slider<PlayerController>(0.05, 0.09, 0.3, 0.01);
-    auto *curTime = new Label<PlayerController>(0.01, 0.085, 14, "");
-    auto *length = new Label<PlayerController>(0.355, 0.085, 14, "");
-    auto *zoomIn = new Button<PlayerController>(0.34, 0.02, 0.02, 0.02, "../zoom_in.png");
-    auto *zoomOut = new Button<PlayerController>(0.365, 0.02, 0.02, 0.02, "../zoom_out.png");
+    auto *play = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../play.png", shader2);
+    auto *pause = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../pause.png", shader2);
+    auto *slider = new Slider<PlayerController>(0.05, 0.088, 0.3, 0.01, "../slider_disc.png", shader2);
+    auto *curTime = new Label<PlayerController>(0.01, 0.085, 14, "", shader2);
+    auto *length = new Label<PlayerController>(0.355, 0.085, 14, "", shader2);
+    auto *zoomIn = new Button<PlayerController>(0.34, 0.02, 0.02, 0.02, "../zoom_in.png", shader2);
+    auto *zoomOut = new Button<PlayerController>(0.365, 0.02, 0.02, 0.02, "../zoom_out.png", shader2);
 
 
-    auto *screen = new Screen<PlayerController>(0, 0, 1, 1);
+    auto *screen = new Screen<PlayerController>(0, 0, 1, 1, shader2);
+    screen->setDrawFocusIndicator(false);
 
     intf.addControl(play);
     intf.addControl(pause);
@@ -182,8 +187,9 @@ int main(int argc, char** argv)
                     }
                     break;
                 case SDLK_SPACE:
-                    intf.clickEvent();
-                    intfScreen.clickEvent();
+                    // Handle click events.
+                    if (!intf.clickEvent())
+                        intfScreen.clickEvent();
                 default:
                     break;
                 }

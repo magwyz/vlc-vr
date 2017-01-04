@@ -11,8 +11,9 @@
 template <class Controller> class Label : public UserControl<Controller>
 {
 public:
-    Label(float x, float y, int fontSize, std::string text)
-        : UserControl<Controller>(x, y, 0, 0),
+    Label(float x, float y, int fontSize,
+          std::string text, GLuint shaderProgram)
+        : UserControl<Controller>(x, y, 0, 0, shaderProgram),
           text(text),
           police(NULL), textSurface(NULL),
           mustRenderText(true)
@@ -60,21 +61,29 @@ public:
         glColor4f(0.f, 0.f, 0.f, 0.f);
         glBindTexture(GL_TEXTURE_2D, texture[0]);
 
-        glBegin(GL_QUADS);
 
-        glTexCoord2f(0.0, 1.0);
-        glVertex3f( 0.f, 0.f, 0.f);
+        GLfloat vertexCoord[] = {
+            0.f, 0.f, 0.f,
+            0.f, this->height, 0.f,
+            this->width, this->height, 0.f,
+            this->width, 0.f, 0.f
+        };
 
-        glTexCoord2f(0.0, 0.0);
-        glVertex3f( 0.f, this->height, 0.f);
+        GLfloat textureCoord[] = {
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+        };
 
-        glTexCoord2f(1.0, 0.0);
-        glVertex3f( this->width, this->height, 0.f);
+        GLushort indices[] = {
+            0, 1, 2, 3
+        };
 
-        glTexCoord2f(1.0, 1.0);
-        glVertex3f( this->width, 0.f, 0.f);
-
-        glEnd();
+        this->drawMesh(vertexCoord, textureCoord,
+                       sizeof(vertexCoord) / sizeof(GLfloat) / 3,
+                       indices, sizeof(indices) / sizeof(GLushort),
+                       GL_QUADS);
 
         glPopMatrix();
     }

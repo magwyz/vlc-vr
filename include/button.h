@@ -13,8 +13,9 @@ template <class Controller> class Button : public UserControl<Controller>
 public:
     Button(float x, float y,
            float width, float height,
-           std::string texturePath)
-        : UserControl<Controller>(x, y, width, height)
+           std::string texturePath,
+           GLuint shaderProgram)
+        : UserControl<Controller>(x, y, width, height, shaderProgram)
     {
         SDL_Surface *surface;
 
@@ -56,21 +57,28 @@ public:
         glColor4f(0.f, 0.f, 0.f, 0.f);
         glBindTexture(GL_TEXTURE_2D, texture[0]);
 
-        glBegin(GL_QUADS);
+        GLfloat vertexCoord[] = {
+            0.f, 0.f, 0.f,
+            0.f, this->height, 0.f,
+            this->width, this->height, 0.f,
+            this->width, 0.f, 0.f
+        };
 
-        glTexCoord2f(0.0, 1.0);
-        glVertex3f( 0.f, 0.f, 0.f);
+        GLfloat textureCoord[] = {
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+        };
 
-        glTexCoord2f(0.0, 0.0);
-        glVertex3f( 0.f, this->height, 0.f);
+        GLushort indices[] = {
+            0, 1, 2, 3
+        };
 
-        glTexCoord2f(1.0, 0.0);
-        glVertex3f( this->width, this->height, 0.f);
-
-        glTexCoord2f(1.0, 1.0);
-        glVertex3f( this->width, 0.f, 0.f);
-
-        glEnd();
+        this->drawMesh(vertexCoord, textureCoord,
+                       sizeof(vertexCoord) / sizeof(GLfloat) / 3,
+                       indices, sizeof(indices) / sizeof(GLushort),
+                       GL_QUADS);
 
         glPopMatrix();
     }

@@ -33,10 +33,13 @@ template <class Controller> class UserControl
 {
 public:
     UserControl(float x, float y,
-                float width, float height)
+                float width, float height,
+                GLuint program)
           : x(x), y(y),
-          width(width), height(height),
-          currentState(REST) {}
+            width(width), height(height),
+            program(program),
+            currentState(REST),
+            drawFocusIndicator(true) {}
 
     virtual void draw()
     {
@@ -45,13 +48,14 @@ public:
        glTranslatef(x, y, 0.f);
 
        /* Draw lines if the control has the focus. */
-       if (currentState == FOCUSSED
-           || currentState == LOCKED)
+       if (drawFocusIndicator
+           && (currentState == FOCUSSED
+               || currentState == LOCKED))
        {
            glPushMatrix();
            glTranslatef(0.f, 0.f, 0.001f);
 
-           glColor4f(0.f, 0.f, 1.f, 1.f);
+           glColor4f(255.f / 255, 136.f / 255, 0.f / 255, 1.f);
 
            glLineWidth(3.f);
 
@@ -156,10 +160,17 @@ public:
         height = h;
     }
 
+    void setDrawFocusIndicator(bool d)
+    {
+        drawFocusIndicator = d;
+    }
+
 
 protected:
     float x, y;
     float width, height;
+
+    bool drawFocusIndicator;
 
     Controller *controller;
 
@@ -170,6 +181,39 @@ protected:
     std::function<void(Controller&)> onUnlock;
 
     std::function<void(Controller&, float, float)> pointerMove;
+
+    void drawMesh(GLfloat *vertexCoord, GLfloat *textureCoord, unsigned nbVertices,
+                  GLushort *indices, unsigned nbIndices, GLenum mode)
+    {
+        GLuint vertexbuffer;
+        glGenBuffers(1, &vertexbuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glBufferData(GL_ARRAY_BUFFER, nbVertices * 3 * sizeof(GLfloat), vertexCoord, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(glGetAttribLocation(program, "vPosition"));
+        glVertexAttribPointer(glGetAttribLocation(program, "vPosition"), 3, GL_FLOAT, 0, 0, 0);
+
+        GLuint texturebuffer;
+        glGenBuffers(1, &texturebuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, texturebuffer);
+        glBufferData(GL_ARRAY_BUFFER, nbVertices * 2 * sizeof(GLfloat), textureCoord, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(glGetAttribLocation(program, "MultiTexCoord0"));
+        glVertexAttribPointer(glGetAttribLocation(program, "MultiTexCoord0"), 2, GL_FLOAT, 0, 0, 0);
+
+        GLuint elementbuffer;
+        glGenBuffers(1, &elementbuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, nbIndices * sizeof(GLushort), indices, GL_STATIC_DRAW);
+
+        glDrawElements(mode, nbIndices, GL_UNSIGNED_SHORT, 0);
+
+        glDeleteBuffers(1, &vertexbuffer);
+        glDeleteBuffers(1, &texturebuffer);
+        glDeleteBuffers(1, &elementbuffer);
+
+    }
+        GLuint program;
 
 private:
     state currentState;
