@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 
     /* User interface */
     UserInterface<PlayerController> intf(-0.2, -0.2, -0.4, 0.4, 0.1);
-    UserInterface<PlayerController> intfScreen(0.f, 0.f, 0.f, 1.f, 1.f);
+    UserInterface<PlayerController> intfScreen(0.f, 0.f, -2.f, 1.f, 1.f);
     intfScreen.setDrawContainer(false);
 
     auto *play = new Button<PlayerController>(0.17, 0.02, 0.05, 0.05, "../play.png", shader2);

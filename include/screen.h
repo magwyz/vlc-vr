@@ -49,22 +49,9 @@ public:
         // Alpha null to tell the shader to apply the texture.
         glColor4f(0.f, 0.f, 0.f, 0.f);
 
-        /*glBegin(GL_QUADS);
+//#define VR_360
 
-        glTexCoord2f(0.0, 1.0);
-        glVertex3f( 0.f, 0.f, 0.f);
-
-        glTexCoord2f(0.0, 0.0);
-        glVertex3f( 0.f, this->height, 0.f);
-
-        glTexCoord2f(1.0, 0.0);
-        glVertex3f( this->width, this->height, 0.f);
-
-        glTexCoord2f(1.0, 1.0);
-        glVertex3f( this->width, 0.f, 0.f);
-
-        glEnd();*/
-
+#ifdef VR_360
         GLfloat *vertexCoord;
         GLfloat *textureCoord;
         unsigned nbVertices;
@@ -79,6 +66,9 @@ public:
 
         free(vertexCoord);
         free(textureCoord);
+#else
+        this->drawBoundingRectangle();
+#endif
 
         glPopMatrix();
     }

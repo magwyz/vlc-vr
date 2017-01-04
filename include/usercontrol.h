@@ -182,6 +182,32 @@ protected:
 
     std::function<void(Controller&, float, float)> pointerMove;
 
+    void drawBoundingRectangle()
+    {
+        GLfloat vertexCoord[] = {
+            0.f, 0.f, 0.f,
+            0.f, this->height, 0.f,
+            this->width, this->height, 0.f,
+            this->width, 0.f, 0.f
+        };
+
+        GLfloat textureCoord[] = {
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+        };
+
+        GLushort indices[] = {
+            0, 1, 2, 3
+        };
+
+        this->drawMesh(vertexCoord, textureCoord,
+                       sizeof(vertexCoord) / sizeof(GLfloat) / 3,
+                       indices, sizeof(indices) / sizeof(GLushort),
+                       GL_QUADS);
+    }
+
     void drawMesh(GLfloat *vertexCoord, GLfloat *textureCoord, unsigned nbVertices,
                   GLushort *indices, unsigned nbIndices, GLenum mode)
     {
