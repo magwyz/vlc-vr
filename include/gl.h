@@ -20,11 +20,11 @@
 
 class PlayerController;
 
-#define TEST_WIDTH 2160
-#define TEST_HEIGHT 1200
+#define SCREEN_WIDTH 2160
+#define SCREEN_HEIGHT 1200
 
-#define EYE_WIDTH (TEST_WIDTH / 2)
-#define EYE_HEIGHT (TEST_HEIGHT)
+#define EYE_WIDTH (SCREEN_WIDTH / 2 * 2)
+#define EYE_HEIGHT (SCREEN_HEIGHT * 2)
 
 typedef struct {
 	int w, h;

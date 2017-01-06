@@ -12,6 +12,10 @@ const vec2 Scale = vec2(0.1469278, 0.2350845);
 const vec2 ScaleIn = vec2(4, 2.5);
 const vec4 HmdWarpParam   = vec4(1, 0.22, 0.24, 0);
 
+uniform int screenWidth;
+uniform int screenHeight;
+
+
 // Scales input texture coordinates for distortion.
 vec2 HmdWarp(vec2 in01, vec2 LensCenter)
 {
@@ -26,10 +30,10 @@ vec2 HmdWarp(vec2 in01, vec2 LensCenter)
 void main()
 {
 	// The following two variables need to be set per eye
-        vec2 LensCenter = gl_FragCoord.x < 1080 ? LeftLensCenter : RightLensCenter;
-        vec2 ScreenCenter = gl_FragCoord.x < 1080 ? LeftScreenCenter : RightScreenCenter;
+        vec2 LensCenter = gl_FragCoord.x < screenWidth / 2 ? LeftLensCenter : RightLensCenter;
+        vec2 ScreenCenter = gl_FragCoord.x < screenWidth / 2 ? LeftScreenCenter : RightScreenCenter;
 
-        vec2 oTexCoord = gl_FragCoord.xy / vec2(2160, 1200);
+        vec2 oTexCoord = gl_FragCoord.xy / vec2(screenWidth, screenHeight);
 
 	vec2 tc = HmdWarp(oTexCoord, LensCenter);
 	if (any(bvec2(clamp(tc,ScreenCenter-vec2(0.25,0.5), ScreenCenter+vec2(0.25,0.5)) - tc)))
@@ -38,6 +42,6 @@ void main()
 		return;
 	}
 
-        tc.x = gl_FragCoord.x < 1080 ? (2.0 * tc.x) : (2.0 * (tc.x - 0.5));
+        tc.x = gl_FragCoord.x < screenWidth / 2 ? (2.0 * tc.x) : (2.0 * (tc.x - 0.5));
 	gl_FragColor = texture2D(warpTexture, tc);
 }

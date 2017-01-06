@@ -82,7 +82,7 @@ int main(int argc, char** argv)
     Player *p = new Player();
 
     gl_ctx gl;
-    init_gl(&gl, TEST_WIDTH, TEST_HEIGHT);
+    init_gl(&gl, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     SDL_ShowCursor(SDL_DISABLE);
 
@@ -97,6 +97,8 @@ int main(int argc, char** argv)
 
     glUseProgram(shader);
     glUniform1i(glGetUniformLocation(shader, "warpTexture"), 0);
+    glUniform1i(glGetUniformLocation(shader, "screenWidth"), SCREEN_WIDTH);
+    glUniform1i(glGetUniformLocation(shader, "screenHeight"), SCREEN_HEIGHT);
     glUseProgram(shader2);
     glUniform1i(glGetUniformLocation(shader2, "myTexture"), 0);
 
@@ -218,7 +220,7 @@ int main(int argc, char** argv)
 
         // Setup ortho state.
         glUseProgram(shader);
-        glViewport(0, 0, TEST_WIDTH, TEST_HEIGHT);
+        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         glEnable(GL_TEXTURE_2D);
 
         // Draw eyes.
