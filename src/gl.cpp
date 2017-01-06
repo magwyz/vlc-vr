@@ -26,6 +26,10 @@
 
 GLuint texture[1];
 
+GLuint vertexBuffer;
+GLuint textureBuffer;
+GLuint indiceBuffer;
+
 
 void init_gl(gl_ctx* ctx, int w, int h)
 {
@@ -74,6 +78,11 @@ void init_gl(gl_ctx* ctx, int w, int h)
 	glEnable(GL_POLYGON_SMOOTH); 
 
 	glViewport(0, 0, ctx->screen->w, ctx->screen->h);
+
+    // Init buffers.
+    glGenBuffers(1, &vertexBuffer);
+    glGenBuffers(1, &textureBuffer);
+    glGenBuffers(1, &indiceBuffer);
 
     TTF_Init();
 }
@@ -196,4 +205,26 @@ void drawEye(ohmd_device *hmd, eye curEye, GLuint fbo,
     intf->drawPointer(hmd);
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+}
+
+
+void drawMesh(GLuint program, GLfloat *vertexCoord, GLfloat *textureCoord, unsigned nbVertices,
+              GLushort *indices, unsigned nbIndices, GLenum mode)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, nbVertices * 3 * sizeof(GLfloat), vertexCoord, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(glGetAttribLocation(program, "vPosition"));
+    glVertexAttribPointer(glGetAttribLocation(program, "vPosition"), 3, GL_FLOAT, 0, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+    glBufferData(GL_ARRAY_BUFFER, nbVertices * 2 * sizeof(GLfloat), textureCoord, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(glGetAttribLocation(program, "MultiTexCoord0"));
+    glVertexAttribPointer(glGetAttribLocation(program, "MultiTexCoord0"), 2, GL_FLOAT, 0, 0, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indiceBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nbIndices * sizeof(GLushort), indices, GL_STATIC_DRAW);
+
+    glDrawElements(mode, nbIndices, GL_UNSIGNED_SHORT, 0);
 }

@@ -237,8 +237,8 @@ protected:
         glDeleteBuffers(1, &vertexbuffer);
         glDeleteBuffers(1, &texturebuffer);
         glDeleteBuffers(1, &elementbuffer);
-
     }
+
         GLuint program;
 
 private:

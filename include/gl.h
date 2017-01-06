@@ -23,8 +23,8 @@ class PlayerController;
 #define TEST_WIDTH 2160
 #define TEST_HEIGHT 1200
 
-#define EYE_WIDTH (TEST_WIDTH / 2 * 2)
-#define EYE_HEIGHT (TEST_HEIGHT * 2)
+#define EYE_WIDTH (TEST_WIDTH / 2)
+#define EYE_HEIGHT (TEST_HEIGHT)
 
 typedef struct {
 	int w, h;
@@ -45,6 +45,8 @@ void create_fbo(int eye_width, int eye_height, GLuint* fbo, GLuint* color_tex, G
 void drawEye(ohmd_device *hmd, eye curEye, GLuint fbo,
              UserInterface<PlayerController> *intf,
              UserInterface<PlayerController> *intfScreen);
+void drawMesh(GLuint program, GLfloat *vertexCoord, GLfloat *textureCoord, unsigned nbVertices,
+              GLushort *indices, unsigned nbIndices, GLenum mode);
 
 
 #endif

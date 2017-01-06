@@ -100,9 +100,6 @@ int main(int argc, char** argv)
     glUseProgram(shader2);
     glUniform1i(glGetUniformLocation(shader2, "myTexture"), 0);
 
-    std::cout << "vPosition: " << glGetAttribLocation(shader2, "vPosition") << std::endl;
-    std::cout << "MultiTexCoord0: " << glGetAttribLocation(shader2, "MultiTexCoord0") << std::endl;
-
     GLuint left_color_tex = 0, left_depth_tex = 0, left_fbo = 0;
     create_fbo(EYE_WIDTH, EYE_HEIGHT, &left_fbo, &left_color_tex, &left_depth_tex);
 
@@ -224,37 +221,47 @@ int main(int argc, char** argv)
         glViewport(0, 0, TEST_WIDTH, TEST_HEIGHT);
         glEnable(GL_TEXTURE_2D);
 
-        // Setup simple render state
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+        // Draw eyes.
 
-        // Draw left eye
+        GLfloat vertexCoordLeft[] = {
+            -1, -1, 0,
+            0, -1, 0,
+            0, 1, 0,
+            -1, 1, 0,
+        };
+
+        GLfloat vertexCoordRight[] = {
+            0, -1, 0,
+            1, -1, 0,
+            1,  1, 0,
+            0,  1, 0,
+        };
+
+        GLfloat textureCoord[] = {
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1,
+        };
+
+        GLushort indices[] = {
+            0, 1, 2, 3
+        };
+
+        // Draw left eye.
         glBindTexture(GL_TEXTURE_2D, left_color_tex);
-        glBegin(GL_QUADS);
-        glTexCoord2d( 0,  0);
-        glVertex3d(  -1, -1, 0);
-        glTexCoord2d( 1,  0);
-        glVertex3d(   0, -1, 0);
-        glTexCoord2d( 1,  1);
-        glVertex3d(   0,  1, 0);
-        glTexCoord2d( 0,  1);
-        glVertex3d(  -1,  1, 0);
-        glEnd();
+        drawMesh(shader, vertexCoordLeft, textureCoord,
+                 sizeof(vertexCoordLeft) / sizeof(GLfloat) / 3,
+                 indices, sizeof(indices) / sizeof(GLushort),
+                 GL_QUADS);
 
-        // Draw right eye
+        // Draw right eye.
         glBindTexture(GL_TEXTURE_2D, right_color_tex);
-        glBegin(GL_QUADS);
-        glTexCoord2d( 0,  0);
-        glVertex3d(   0, -1, 0);
-        glTexCoord2d( 1,  0);
-        glVertex3d(   1, -1, 0);
-        glTexCoord2d( 1,  1);
-        glVertex3d(   1,  1, 0);
-        glTexCoord2d( 0,  1);
-        glVertex3d(   0,  1, 0);
-        glEnd();
+        drawMesh(shader, vertexCoordRight, textureCoord,
+                 sizeof(vertexCoordLeft) / sizeof(GLfloat) / 3,
+                 indices, sizeof(indices) / sizeof(GLushort),
+                 GL_QUADS);
+
 
         // Clean up state.
         glBindTexture(GL_TEXTURE_2D, 0);
