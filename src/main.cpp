@@ -20,11 +20,6 @@
 #include <userinterface.h>
 #include <playercontroller.h>
 
-#define TEST_WIDTH 2160
-#define TEST_HEIGHT 1200
-
-#define EYE_WIDTH (TEST_WIDTH / 2 * 2)
-#define EYE_HEIGHT (TEST_HEIGHT * 2)
 
 char* read_file(const char* filename)
 {
@@ -216,48 +211,10 @@ int main(int argc, char** argv)
         // Common scene state
         glEnable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
-        float matrix[16];
 
-        // set hmd rotation, for left eye.
-        glMatrixMode(GL_PROJECTION);
-        ohmd_device_getf(hmd, OHMD_LEFT_EYE_GL_PROJECTION_MATRIX, matrix);
-        glLoadMatrixf(matrix);
+        drawEye(hmd, LEFT_EYE, left_fbo, &intf, &intfScreen);
+        drawEye(hmd, RIGHT_EYE, right_fbo, &intf, &intfScreen);
 
-        glMatrixMode(GL_MODELVIEW);
-        ohmd_device_getf(hmd, OHMD_LEFT_EYE_GL_MODELVIEW_MATRIX, matrix);
-        glLoadMatrixf(matrix);
-
-        // Draw scene into framebuffer.
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, left_fbo);
-        glViewport(0, 0, EYE_WIDTH, EYE_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        intf.draw();
-        intfScreen.draw();
-        intf.drawPointer(hmd);
-
-
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-
-        // set hmd rotation, for right eye.
-        glMatrixMode(GL_PROJECTION);
-        ohmd_device_getf(hmd, OHMD_RIGHT_EYE_GL_PROJECTION_MATRIX, matrix);
-        glLoadMatrixf(matrix);
-
-        glMatrixMode(GL_MODELVIEW);
-        ohmd_device_getf(hmd, OHMD_RIGHT_EYE_GL_MODELVIEW_MATRIX, matrix);
-        glLoadMatrixf(matrix);
-
-        // Draw scene into framebuffer.
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, right_fbo);
-        glViewport(0, 0, EYE_WIDTH, EYE_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        intf.draw();
-        intfScreen.draw();
-        intf.drawPointer(hmd);
-
-        // Clean up common draw state
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
 
@@ -266,7 +223,6 @@ int main(int argc, char** argv)
         glUseProgram(shader);
         glViewport(0, 0, TEST_WIDTH, TEST_HEIGHT);
         glEnable(GL_TEXTURE_2D);
-        glColor4d(1, 1, 1, 1);
 
         // Setup simple render state
         glMatrixMode(GL_PROJECTION);
@@ -307,7 +263,6 @@ int main(int argc, char** argv)
 
         // Da swap-dawup!
         SDL_GL_SwapBuffers();
-        //SDL_Delay(10);
     }
 
     delete play;

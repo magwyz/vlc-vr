@@ -11,6 +11,8 @@
 #include <math.h>
 #include <mutex>
 
+#include <openhmd.h>
+
 #include "gl.h"
 #include "player.h"
 
@@ -162,4 +164,36 @@ void create_fbo(int eye_width, int eye_height, GLuint* fbo, GLuint* color_tex, G
 		printf("failed to create fbo %x\n", status);
 	}
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+}
+
+
+void drawEye(ohmd_device *hmd, eye curEye, GLuint fbo,
+             UserInterface<PlayerController> *intf,
+             UserInterface<PlayerController> *intfScreen)
+{
+    float matrix[16];
+
+    ohmd_float_value projectionMatrix = (curEye == LEFT_EYE
+        ? OHMD_LEFT_EYE_GL_PROJECTION_MATRIX : OHMD_RIGHT_EYE_GL_PROJECTION_MATRIX);
+    ohmd_float_value modelViewMatrix = (curEye == LEFT_EYE
+        ? OHMD_LEFT_EYE_GL_MODELVIEW_MATRIX : OHMD_RIGHT_EYE_GL_MODELVIEW_MATRIX);
+
+    // set hmd rotation, for left eye.
+    glMatrixMode(GL_PROJECTION);
+    ohmd_device_getf(hmd, projectionMatrix, matrix);
+    glLoadMatrixf(matrix);
+
+    glMatrixMode(GL_MODELVIEW);
+    ohmd_device_getf(hmd, modelViewMatrix, matrix);
+    glLoadMatrixf(matrix);
+
+    // Draw scene into framebuffer.
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
+    glViewport(0, 0, EYE_WIDTH, EYE_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    intf->draw();
+    intfScreen->draw();
+    intf->drawPointer(hmd);
+
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
