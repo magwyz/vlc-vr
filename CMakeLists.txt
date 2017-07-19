@@ -19,9 +19,7 @@ set(HEADERS      include/gl.h
                  include/quaternion.h
                  include/screen.h)
 
-find_package(PkgConfig REQUIRED)
-pkg_search_module(OPENHMD REQUIRED openhmd)
-
+find_package(OpenHMD REQUIRED)
 find_package(LIBVLC REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
@@ -32,7 +30,7 @@ find_package(SDL_ttf REQUIRED)
 add_executable(vlc-vr ${SOURCES} ${HEADERS})
 
 target_link_libraries(vlc-vr
-     ${OPENHMD_LIBRARIES}
+     ${OpenHMD_LIBRARIES}
      ${LIBVLC_LIBRARY}
      ${OPENGL_LIBRARIES}
      ${GLEW_LIBRARIES}
@@ -41,12 +39,12 @@ target_link_libraries(vlc-vr
      ${SDL_TTF_LIBRARY})
 target_include_directories(vlc-vr PUBLIC
      ${CMAKE_SOURCE_DIR}/include
-     ${OPENHMD_INCLUDE_DIRS}
+     ${OpenHMD_INCLUDES}
      ${LIBVLC_INCLUDE_DIR}
      ${OPENGL_INCLUDE_DIRS}
      ${GLEW_INCLUDE_DIRS}
      ${SDL_INCLUDE_DIR}
      ${SDL_IMAGE_INCLUDE_DIR}
      ${SDL_TTF_INCLUDE_DIR})
-set_target_properties(vlc-vr PROPERTIES LINK_FLAGS ${OPENHMD_LDFLAGS})
+
 
