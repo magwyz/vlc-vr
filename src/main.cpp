@@ -42,7 +42,7 @@ char* read_file(const char* filename)
 
 void usage()
 {
-    std::cout << "Usage: vlc-vr media_path" << std::endl;
+    std::cout << "Usage: vlc-vr media_path 1.0 (optional oversample number)" << std::endl;
 }
 
 
@@ -53,6 +53,11 @@ int main(int argc, char** argv)
         usage();
         return 1;
     }
+
+    int OVERSAMPLE_SCALE = 1.0f;
+    if (argv[2])
+        OVERSAMPLE_SCALE = atoi(argv[2]);
+    int hmd_w, hmd_h;
 
     ohmd_context* ctx = ohmd_ctx_create();
     int num_devices = ohmd_ctx_probe(ctx);
@@ -72,6 +77,34 @@ int main(int argc, char** argv)
 
     ohmd_device* hmd = ohmd_list_open_device_s(ctx, 0, settings);
 
+    // Prepare all values for the Universal Lens Distortion shader
+    ohmd_device_geti(hmd, OHMD_SCREEN_HORIZONTAL_RESOLUTION, &hmd_w);
+    ohmd_device_geti(hmd, OHMD_SCREEN_VERTICAL_RESOLUTION, &hmd_h);
+    float ipd;
+    ohmd_device_getf(hmd, OHMD_EYE_IPD, &ipd);
+    float viewport_scale[2];
+    float distortion_coeffs[4];
+    float aberr_scale[3];
+    float sep;
+    float left_lens_center[2];
+    float right_lens_center[2];
+    //viewport is half the screen
+    ohmd_device_getf(hmd, OHMD_SCREEN_HORIZONTAL_SIZE, &(viewport_scale[0]));
+    viewport_scale[0] /= 2.0f;
+    ohmd_device_getf(hmd, OHMD_SCREEN_VERTICAL_SIZE, &(viewport_scale[1]));
+    //distortion coefficients
+    ohmd_device_getf(hmd, OHMD_UNIVERSAL_DISTORTION_K, &(distortion_coeffs[0]));
+    ohmd_device_getf(hmd, OHMD_UNIVERSAL_ABERRATION_K, &(aberr_scale[0]));
+    //calculate lens centers (assuming the eye separation is the distance betweenteh lense centers)
+    ohmd_device_getf(hmd, OHMD_LENS_HORIZONTAL_SEPARATION, &sep);
+    ohmd_device_getf(hmd, OHMD_LENS_VERTICAL_POSITION, &(left_lens_center[1]));
+    ohmd_device_getf(hmd, OHMD_LENS_VERTICAL_POSITION, &(right_lens_center[1]));
+    left_lens_center[0] = viewport_scale[0] - sep/2.0f;
+    right_lens_center[0] = sep/2.0f;
+    //asume calibration was for lens view to which ever edge of screen is further away from lens center
+    float warp_scale = (left_lens_center[0] > right_lens_center[0]) ? left_lens_center[0] : right_lens_center[0];
+    float warp_adj = 1.0f;
+
     ohmd_device_settings_destroy(settings);
 
     if(!hmd){
@@ -82,12 +115,14 @@ int main(int argc, char** argv)
     Player *p = new Player();
 
     gl_ctx gl;
-    init_gl(&gl, SCREEN_WIDTH, SCREEN_HEIGHT);
+    init_gl(&gl, hmd_w, hmd_h);
 
     SDL_ShowCursor(SDL_DISABLE);
 
-    char* vertex = read_file("../shaders/test1.vert.glsl");
-    char* fragment = read_file("../shaders/test1.frag.glsl");
+    const char* vertex;
+    ohmd_gets(OHMD_GLSL_DISTORTION_VERT_SRC, &vertex);
+    const char* fragment;
+    ohmd_gets(OHMD_GLSL_DISTORTION_FRAG_SRC, &fragment);
 
     char* vertex2 = read_file("../shaders/test1.vert2.glsl");
     char* fragment2 = read_file("../shaders/test1.frag2.glsl");
@@ -97,16 +132,18 @@ int main(int argc, char** argv)
 
     glUseProgram(shader);
     glUniform1i(glGetUniformLocation(shader, "warpTexture"), 0);
-    glUniform1i(glGetUniformLocation(shader, "screenWidth"), SCREEN_WIDTH);
-    glUniform1i(glGetUniformLocation(shader, "screenHeight"), SCREEN_HEIGHT);
+    glUniform2fv(glGetUniformLocation(shader, "ViewportScale"), 1, viewport_scale);
+    glUniform3fv(glGetUniformLocation(shader, "aberr"), 1, aberr_scale);
     glUseProgram(shader2);
     glUniform1i(glGetUniformLocation(shader2, "myTexture"), 0);
 
+    int eye_w = hmd_w/2*OVERSAMPLE_SCALE;
+    int eye_h = hmd_h*OVERSAMPLE_SCALE;
     GLuint left_color_tex = 0, left_depth_tex = 0, left_fbo = 0;
-    create_fbo(EYE_WIDTH, EYE_HEIGHT, &left_fbo, &left_color_tex, &left_depth_tex);
+    create_fbo(eye_w, eye_h, &left_fbo, &left_color_tex, &left_depth_tex);
 
     GLuint right_color_tex = 0, right_depth_tex = 0, right_fbo = 0;
-    create_fbo(EYE_WIDTH, EYE_HEIGHT, &right_fbo, &right_color_tex, &right_depth_tex);
+    create_fbo(eye_w, eye_h, &right_fbo, &right_color_tex, &right_depth_tex);
 
     /* User interface */
     UserInterface<PlayerController> intf(-0.2, -0.2, -0.4, 0.4, 0.1);
@@ -170,7 +207,10 @@ int main(int argc, char** argv)
                     done = true;
                     break;
                 case SDLK_F1:
-                    SDL_WM_ToggleFullScreen(gl.screen);
+                    {
+                        gl.is_fullscreen = !gl.is_fullscreen;
+                        SDL_SetWindowFullscreen(gl.window, gl.is_fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+                    }
                     break;
                 case SDLK_F2:
                     {
@@ -184,6 +224,28 @@ int main(int argc, char** argv)
                     // Handle click events.
                     if (!intf.clickEvent())
                         intfScreen.clickEvent();
+                case SDLK_i:
+                    ipd -= 0.001;
+                    ohmd_device_setf(hmd, OHMD_EYE_IPD, &ipd);
+                    break;
+                case SDLK_o:
+                    ipd += 0.001;
+                    ohmd_device_setf(hmd, OHMD_EYE_IPD, &ipd);
+                    break;
+                case SDLK_d:
+                    /* toggle between distorted and undistorted views */
+                    if ((distortion_coeffs[0] != 0.0) ||
+                            (distortion_coeffs[1] != 0.0) ||
+                            (distortion_coeffs[2] != 0.0) ||
+                            (distortion_coeffs[3] != 1.0)) {
+                        distortion_coeffs[0] = 0.0;
+                        distortion_coeffs[1] = 0.0;
+                        distortion_coeffs[2] = 0.0;
+                        distortion_coeffs[3] = 1.0;
+                    } else {
+                        ohmd_device_getf(hmd, OHMD_UNIVERSAL_DISTORTION_K, &(distortion_coeffs[0]));
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -210,21 +272,9 @@ int main(int argc, char** argv)
         // Common scene state
         glEnable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
-
-        drawEye(hmd, LEFT_EYE, left_fbo, &intf, &intfScreen);
-        drawEye(hmd, RIGHT_EYE, right_fbo, &intf, &intfScreen);
-
-        glDisable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-
-
-        // Setup ortho state.
-        glUseProgram(shader);
-        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        glEnable(GL_TEXTURE_2D);
+        float matrix[16];
 
         // Draw eyes.
-
         GLfloat vertexCoordLeft[] = {
             -1, -1, 0,
             0, -1, 0,
@@ -250,20 +300,47 @@ int main(int argc, char** argv)
             0, 1, 2, 3
         };
 
-        // Draw left eye.
+        // Setup ortho state.
+        glUseProgram(shader);
+        glUniform1f(glGetUniformLocation(shader, "WarpScale"), warp_scale*warp_adj);
+        glUniform4fv(glGetUniformLocation(shader, "HmdWarpParam"), 1, distortion_coeffs);
+        glViewport(0, 0, hmd_w, hmd_h);
+        glEnable(GL_TEXTURE_2D);
+        glColor4d(1, 1, 1, 1);
+
+        // Setup simple render state
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        // Draw left eye
+        glUniform2fv(glGetUniformLocation(shader, "LensCenter"), 1, left_lens_center);
         glBindTexture(GL_TEXTURE_2D, left_color_tex);
-        drawMesh(shader, vertexCoordLeft, textureCoord,
-                 sizeof(vertexCoordLeft) / sizeof(GLfloat) / 3,
-                 indices, sizeof(indices) / sizeof(GLushort),
-                 GL_QUADS);
+        glBegin(GL_QUADS);
+        glTexCoord2d( 0,  0);
+        glVertex3d(  -1, -1, 0);
+        glTexCoord2d( 1,  0);
+        glVertex3d(   0, -1, 0);
+        glTexCoord2d( 1,  1);
+        glVertex3d(   0,  1, 0);
+        glTexCoord2d( 0,  1);
+        glVertex3d(  -1,  1, 0);
+        glEnd();
 
-        // Draw right eye.
+        // Draw right eye
+        glUniform2fv(glGetUniformLocation(shader, "LensCenter"), 1, right_lens_center);
         glBindTexture(GL_TEXTURE_2D, right_color_tex);
-        drawMesh(shader, vertexCoordRight, textureCoord,
-                 sizeof(vertexCoordLeft) / sizeof(GLfloat) / 3,
-                 indices, sizeof(indices) / sizeof(GLushort),
-                 GL_QUADS);
-
+        glBegin(GL_QUADS);
+        glTexCoord2d( 0,  0);
+        glVertex3d(   0, -1, 0);
+        glTexCoord2d( 1,  0);
+        glVertex3d(   1, -1, 0);
+        glTexCoord2d( 1,  1);
+        glVertex3d(   1,  1, 0);
+        glTexCoord2d( 0,  1);
+        glVertex3d(   0,  1, 0);
+        glEnd();
 
         // Clean up state.
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -271,7 +348,7 @@ int main(int argc, char** argv)
         glUseProgram(shader2);
 
         // Da swap-dawup!
-        SDL_GL_SwapBuffers();
+        SDL_GL_SwapWindow(gl.window);
     }
 
     delete play;
@@ -279,8 +356,6 @@ int main(int argc, char** argv)
 
     ohmd_ctx_destroy(ctx);
 
-    free(vertex);
-    free(fragment);
     delete(p);
 
     return 0;
