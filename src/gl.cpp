@@ -30,7 +30,6 @@ GLuint vertexBuffer;
 GLuint textureBuffer;
 GLuint indiceBuffer;
 
-
 void init_gl(gl_ctx* ctx, int w, int h)
 {
 	memset(ctx, 0, sizeof(gl_ctx));
@@ -43,18 +42,31 @@ void init_gl(gl_ctx* ctx, int w, int h)
 	}
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 
-	ctx->screen = SDL_SetVideoMode(w, h, 0, SDL_OPENGL | SDL_GL_DOUBLEBUFFER);
-	if(ctx->screen == NULL){
-		printf("SDL_SetVideoMode failed\n");
+	ctx->window = SDL_CreateWindow("OpenHMD opengl example",
+			SDL_WINDOWPOS_UNDEFINED,
+			SDL_WINDOWPOS_UNDEFINED,
+			w, h, SDL_WINDOW_OPENGL );
+	if(ctx->window == NULL) {
+		printf("SDL_CreateWindow failed\n");
+		exit(-1);
+	}
+	ctx->w = w;
+	ctx->h = h;
+	ctx->is_fullscreen = 0;
+
+	ctx->glcontext = SDL_GL_CreateContext(ctx->window);
+	if(ctx->glcontext == NULL){
+		printf("SDL_GL_CreateContext\n");
 		exit(-1);
 	}
 
+	SDL_GL_SetSwapInterval(1);
+
 	// Disable ctrl-c catching on linux (and OS X?) 
-	#ifdef __unix
+#ifdef __unix
 	signal(SIGINT, SIG_DFL);
-	#endif
+#endif
 
 	// Load extensions.
 	glewInit();
@@ -70,23 +82,36 @@ void init_gl(gl_ctx* ctx, int w, int h)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_ALPHA_TEST);
+	glLoadIdentity();
 
 	glShadeModel(GL_SMOOTH);
 	glDisable(GL_DEPTH_TEST);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glLoadIdentity();
 
+	glMatrixMode(GL_PROJECTION);
 	glEnable(GL_POLYGON_SMOOTH); 
+	glLoadIdentity();
 
-	glViewport(0, 0, ctx->screen->w, ctx->screen->h);
-
-    // Init buffers.
-    glGenBuffers(1, &vertexBuffer);
-    glGenBuffers(1, &textureBuffer);
-    glGenBuffers(1, &indiceBuffer);
-
-    TTF_Init();
+	glViewport(0, 0, ctx->w, ctx->h);
 }
 
+void ortho(gl_ctx* ctx)
+{
+	glMatrixMode(GL_PROJECTION);
+	//glPushMatrix();
+	glLoadIdentity();
+
+	glOrtho(0.0f, ctx->w, ctx->h, 0.0f, -1.0f, 1.0f);
+	glMatrixMode(GL_MODELVIEW);
+	//glPushMatrix();
+	glLoadIdentity();
+	
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH);
+
+	glDisable(GL_MULTISAMPLE);
+}
 
 static void compile_shader_src(GLuint shader, const char* src)
 {
@@ -103,7 +128,6 @@ static void compile_shader_src(GLuint shader, const char* src)
 		printf("compile failed %s\n", log);
 	}
 }
-
 
 GLuint compile_shader(const char* vertex, const char* fragment)
 {
@@ -176,9 +200,10 @@ void create_fbo(int eye_width, int eye_height, GLuint* fbo, GLuint* color_tex, G
 }
 
 
+
 void drawEye(ohmd_device *hmd, eye curEye, GLuint fbo,
              UserInterface<PlayerController> *intf,
-             UserInterface<PlayerController> *intfScreen)
+             UserInterface<PlayerController> *intfScreen, int eye_w, int eye_h)
 {
     float matrix[16];
 
@@ -198,7 +223,7 @@ void drawEye(ohmd_device *hmd, eye curEye, GLuint fbo,
 
     // Draw scene into framebuffer.
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
-    glViewport(0, 0, EYE_WIDTH, EYE_HEIGHT);
+    glViewport(0, 0, eye_w, eye_h);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     intf->draw();
     intfScreen->draw();
